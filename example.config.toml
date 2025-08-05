@@ -1,0 +1,25 @@
+[favro]
+user_id = "your.email@domain.com"
+user_token = "your_user_token_here" # My profile -> API tokens
+organization_id = "your_organization_id_here" # Present at favro.com/organization/<organization_id>
+widget_id = "your_widget_id_here" # Present at favro.com/widget/<organization_id>/<widget_id>
+
+[trello]
+# https://trello.com/power-ups/admin
+api_key = "your_trello_api_key_here"
+
+# once created and on the API key screen, look for:
+# > If you are looking to build an application for yourself,
+# > or are doing local testing, you can manually generate a Token.
+api_token = "your_trello_api_token_here"
+
+# this one's annoying to get.
+# open your Trello board in a browser, open the developer console,
+# and refresh the page.
+# in the network tab, look for a request to https://trello.com/1/board/
+# (you can use the above url to filter the requests).
+# the first requests use the board's short ID, but in these calls' response,
+# you'll find a `id` field with the full ID.
+# that's the one you want to put here.
+# (in fact, any call to that url responds with our desired `id` field, lol)
+board_id = "your_trello_board_id_here"

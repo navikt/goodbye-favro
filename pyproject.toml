@@ -1,0 +1,7 @@
+[project]
+name = "goodbye-favro"
+version = "0.1.0"
+description = "Let's move our stuff from Favro to Trello!"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["requests>=2.32.4", "requests-ratelimiter>=0.7.0"]
