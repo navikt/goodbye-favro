@@ -1,6 +1,14 @@
+import re
 from requests_ratelimiter import LimiterSession
 
-from src.datatypes import TrelloCard, TrelloList, TrelloLabel, FavroCard
+from src.datatypes import (
+    TrelloCard,
+    TrelloList,
+    TrelloLabel,
+    FavroCard,
+    TrelloChecklist,
+    Tag,
+)
 
 
 class ResourceType:
@@ -8,6 +16,7 @@ class ResourceType:
     LISTS = "lists"
     CARDS = "cards"
     LABELS = "labels"
+    CHECKLISTS = "checklists"
 
 
 class Trello:
@@ -43,8 +52,8 @@ class Trello:
             return []
 
     def __post_resource(
-        self, api_endpoint: str, params: dict[str, str] | None = None
-    ) -> dict | None:
+        self, api_endpoint: str, params: dict[str, str] | None = None, ret_type=None
+    ):
         response = self.session.post(
             f"https://api.trello.com/1/{api_endpoint}",
             params={**params, "key": self.api_key, "token": self.api_token}
@@ -52,6 +61,8 @@ class Trello:
             else {"key": self.api_key, "token": self.api_token},
         )
         if response.status_code == 200:
+            if ret_type:
+                return ret_type(response.json())
             return response.json()
         else:
             print(
@@ -61,9 +72,9 @@ class Trello:
 
     def __to_type(
         self,
-        datatype: type[TrelloCard | TrelloList | TrelloLabel],
-        json_data: list,
-    ) -> list[TrelloCard] | list[TrelloList] | list[TrelloLabel]:
+        datatype,
+        json_data: list[dict[str, object]],
+    ) -> list[object]:
         return [datatype(x) for x in json_data]  # TODO: fix the type hinting
 
     def get_board(self):
@@ -109,20 +120,52 @@ class Trello:
             print(f"Failed to create Trello list for {name}")
             return None
 
+    def checklist_items(self, favro_card: FavroCard):
+        description_lines = favro_card.description.split("\n")
+        description = ""
+        checklist_items = []
+        for line in description_lines:
+            matched = re.match(r"\s?+-\s?+\[[x\s]]\s?+(.*)", line)
+            if matched:
+                item = matched.group(1)
+                checklist_items.append(("[x]" in item, item))
+            else:
+                description += f"{line}\n"
+        return description, checklist_items
+
+    def create_checklist(
+        self, trello_card: TrelloCard, checklist_items: list[tuple[bool, str]]
+    ):
+        checklist = self.__post_resource(
+            f"{ResourceType.CHECKLISTS}",
+            params={"idCard": trello_card.id, "name": "To do"},
+        )
+        if checklist:
+            checklist = TrelloChecklist(
+                self.session, self.api_key, self.api_token, checklist
+            )
+            for checked, name in checklist_items:
+                checklist.create_item(checked, name)
+
     def create_card(
-        self, favro_card: FavroCard, trello_list_id: str
+        self, favro_card: FavroCard, trello_list_id: str, tags: list[Tag]
     ) -> TrelloCard | None:
+        description, checklist_items = self.checklist_items(favro_card)
         print(f"Creating Trello card: {favro_card.name} in list {trello_list_id}")
         params = {
             "name": favro_card.name,
-            "desc": favro_card.description,
+            "desc": description,
             "idList": trello_list_id,
             "key": self.api_key,
+            "idLabels": [x.trello.id for x in tags],
             "token": self.api_token,
         }
         trello_card = self.__post_resource(ResourceType.CARDS, params)
         if trello_card:
-            return TrelloCard(trello_card)
+            ret = TrelloCard(trello_card)
+            if len(checklist_items) > 0:
+                self.create_checklist(ret, checklist_items)
+            return ret
         else:
             print(f"Failed to create Trello card for {favro_card.name}")
             return None

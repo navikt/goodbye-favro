@@ -1,7 +1,9 @@
 import tomllib
 
 from src.config import Config
-from src import goodbye_favro, hello_trello, unholy_union
+from src.goodbye_favro import Favro
+from src.hello_trello import Trello
+from src.unholy_union import UnholyUnion
 
 
 def parse_config():
@@ -11,11 +13,11 @@ def parse_config():
 
 if __name__ == "__main__":
     config = parse_config()
-    favro = goodbye_favro.Favro(config=config.favro)
-    trello = hello_trello.Trello(
+    favro: Favro = Favro(config=config.favro)
+    trello: Trello = Trello(
         config=config.trello,
     )
 
     print(trello.labels)
-    unholy_union = unholy_union.UnholyUnion(trello, favro)
+    unholy_union = UnholyUnion(trello, favro)
     # print(unholy_union.columns)

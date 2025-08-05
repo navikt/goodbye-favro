@@ -7,3 +7,4 @@ from src.datatypes.lane import FavroLane
 from src.datatypes.tags.favro.tags import FavroTag
 from src.datatypes.tags.trello.label import TrelloLabel
 from src.datatypes.tags.tags import Tag, choose_color
+from src.datatypes.checklist import TrelloChecklist

@@ -63,9 +63,10 @@ class UnholyUnion:
         print(
             f"Found {len(favro_cards)} Favro cards and {len(trello_cards)} Trello cards"
         )
-        exit()  # TODO: remove this
+        
         unified_cards = []
-        for favro_card in favro_cards:
+        for favro_card in reversed(favro_cards):
+            tags = [x for x in self.tags if x.favro.id in favro_card.tags]
             trello_card = next(
                 (
                     trello_card
@@ -80,8 +81,8 @@ class UnholyUnion:
                     print(
                         f"Column with ID {favro_card.column_id} not found in Trello.... weird"
                     )
-                    exit()  # TODO: remove this line
-                trello_card = self.trello.create_card(favro_card, column.trello.id)
+                    exit(1)
+                trello_card = self.trello.create_card(favro_card, column.trello.id, tags)
                 if not trello_card:
                     continue
             unified_cards.append(trello_card)

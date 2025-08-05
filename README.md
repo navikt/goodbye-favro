@@ -13,8 +13,8 @@ Copy `example.config.toml` to `config.toml` and fill out the required changes!
 Currently we can
 
 - [x] Create lists in Trello from Favro columns
-- [ ] Create labels in Trello from Favro tags
-- [ ] Create cards in Trello from Favro cards
+- [x] Create labels in Trello from Favro tags
+- [x] Create cards in Trello from Favro cards
   - (using appropriate labels created in the previous step)
-- [ ] Create checklists in Trello from Favro card descriptions containing `r#- \[[x\s]\].\*#
+- [x] Create checklists in Trello from Favro card descriptions containing `r#- \[[x\s]\].\*#
   - (and attach the checklists to a corresponding card in Trello)
