@@ -36,6 +36,8 @@ class Favro:
             print("Favro widget not found, exiting...")
             exit(1)
         self.lanes = [FavroLane(lane) for lane in self.__widget["lanes"]]
+        self.columns = self.get_columns()
+        self.cards = self.get_cards(self.columns)
 
     def __get_resource(self, api_endpoint, params=None):
         resource = []
@@ -71,7 +73,7 @@ class Favro:
                 return card
         return None
 
-    def get_cards(self, columns: list[Column]):
+    def get_cards(self, columns: list[FavroColumn]):
         cards = []
         lane_ids = [lane.id for lane in self.lanes]
         for column in columns:
@@ -81,7 +83,7 @@ class Favro:
                     ResourceType.CARDS,
                     {
                         "widgetCommonId": self.widget_id,
-                        "columnId": column.favro.id,
+                        "columnId": column.id,
                         "descriptionFormat": "markdown",
                     },
                 ),

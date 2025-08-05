@@ -11,8 +11,8 @@ class UnholyUnion:
         self.cards = self.__cards()
 
     def __columns(self):
-        trello_lists = self.trello.get_lists()
-        favro_columns = self.favro.get_columns()
+        trello_lists = self.trello.lists
+        favro_columns = self.favro.columns
         unified_columns = []
         for column in favro_columns:
             trello_list = next(
@@ -33,8 +33,8 @@ class UnholyUnion:
         return sorted(unified_columns, key=lambda x: x.trello.pos)
 
     def __cards(self):
-        trello_cards = self.trello.get_cards()
-        favro_cards = self.favro.get_cards(self.columns)
+        trello_cards = self.trello.cards
+        favro_cards = self.favro.cards
         print(
             f"Found {len(favro_cards)} Favro cards and {len(trello_cards)} Trello cards"
         )

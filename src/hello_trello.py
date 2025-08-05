@@ -21,6 +21,9 @@ class Trello:
         # so a limit of 400 per minute (66 per 10 seconds) should be safe :)
         self.session = LimiterSession(per_minute=400)
 
+        self.cards = self.get_cards()
+        self.lists = self.get_lists()
+
     def __get_resource(self, api_endpoint, params=None):
         response = self.session.get(
             f"https://api.trello.com/1/{api_endpoint}",
