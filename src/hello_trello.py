@@ -89,10 +89,11 @@ class Trello:
             print(f"Failed to create Trello list for {name}")
             return None
 
-    def create_card(self, name, trello_list_id):
-        print(f"Creating Trello card: {name} in list {trello_list_id}")
+    def create_card(self, favro_card, trello_list_id):
+        print(f"Creating Trello card: {favro_card.name} in list {trello_list_id}")
         params = {
-            "name": name,
+            "name": favro_card.name,
+            "desc": favro_card.description,
             "idList": trello_list_id,
             "key": self.api_key,
             "token": self.api_token,
@@ -101,5 +102,5 @@ class Trello:
         if trello_card:
             return TrelloCard(trello_card)
         else:
-            print(f"Failed to create Trello card for {name}")
+            print(f"Failed to create Trello card for {favro_card.name}")
             return None

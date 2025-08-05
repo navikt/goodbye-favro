@@ -40,24 +40,24 @@ class UnholyUnion:
         )
         exit() # TODO: remove this
         unified_cards = []
-        for card in favro_cards:
+        for favro_card in favro_cards:
             trello_card = next(
                 (
                     trello_card
                     for trello_card in trello_cards
-                    if trello_card.name == card.name
+                    if trello_card.name == favro_card.name
                 ),
                 None,
             )
             if not trello_card:
-                trello_list_id = get_column_from_favro_id(self.columns, card.column_id)
-                if not trello_list_id:
+                column = get_column_from_favro_id(self.columns, favro_card.column_id)
+                if not column:
                     print(
-                        f"Column with ID {card.column_id} not found in Trello.... weird"
+                        f"Column with ID {favro_card.column_id} not found in Trello.... weird"
                     )
                     exit() # TODO: remove this line
                 trello_card = self.trello.create_card(
-                    card.name, trello_list_id.trello.id
+                    favro_card, column.trello.id
                 )
                 if not trello_card:
                     continue
