@@ -1,14 +1,39 @@
 from src.goodbye_favro import Favro
 from src.hello_trello import Trello
-from src.datatypes import Column, get_column_from_favro_id
+from src.datatypes import Column, Tag, get_column_from_favro_id, choose_color
 
 
 class UnholyUnion:
     def __init__(self, trello: Trello, favro: Favro):
         self.trello = trello
         self.favro = favro
+        self.tags = self.__tags()
         self.columns = self.__columns()
         self.cards = self.__cards()
+
+    def __tags(self):
+        trello_labels = self.trello.labels
+        favro_tags = self.favro.tags
+        print(
+            f"Found {len(favro_tags)} Favro tags and {len(trello_labels)} Trello labels"
+        )
+        ret_tags = []
+        for favro_tag in favro_tags:
+            color = choose_color(favro_tag)
+            trello_label = next(
+                (
+                    label
+                    for label in trello_labels
+                    if label.name == favro_tag.name and label.color == color
+                ),
+                None,
+            )
+            if not trello_label:
+                trello_label = self.trello.create_label(favro_tag.name, color)
+                if not trello_label:
+                    continue
+            ret_tags.append(Tag(favro_tag, trello_label))
+        return ret_tags
 
     def __columns(self):
         trello_lists = self.trello.lists
@@ -38,7 +63,7 @@ class UnholyUnion:
         print(
             f"Found {len(favro_cards)} Favro cards and {len(trello_cards)} Trello cards"
         )
-        exit() # TODO: remove this
+        exit()  # TODO: remove this
         unified_cards = []
         for favro_card in favro_cards:
             trello_card = next(
@@ -55,10 +80,8 @@ class UnholyUnion:
                     print(
                         f"Column with ID {favro_card.column_id} not found in Trello.... weird"
                     )
-                    exit() # TODO: remove this line
-                trello_card = self.trello.create_card(
-                    favro_card, column.trello.id
-                )
+                    exit()  # TODO: remove this line
+                trello_card = self.trello.create_card(favro_card, column.trello.id)
                 if not trello_card:
                     continue
             unified_cards.append(trello_card)

@@ -1,6 +1,6 @@
 from requests_ratelimiter import LimiterSession
 
-from src.datatypes import FavroColumn, FavroCard, Column, FavroLane
+from src.datatypes import FavroColumn, FavroCard, FavroLane, FavroTag
 
 
 class ResourceType:
@@ -37,7 +37,8 @@ class Favro:
             exit(1)
         self.lanes = [FavroLane(lane) for lane in self.__widget["lanes"]]
         self.columns = self.get_columns()
-        self.cards = self.get_cards(self.columns)
+        self.cards = self.get_cards()
+        self.tags = self.get_tags()
 
     def __get_resource(self, api_endpoint, params=None):
         resource = []
@@ -61,11 +62,13 @@ class Favro:
                 should_stop = True
         return resource
 
-    def __to_type(self, datatype, json_data):
+    def __to_type(
+        self, datatype: type[FavroCard | FavroColumn | FavroTag], json_data: list
+    ) -> list[FavroCard | FavroColumn | FavroTag]:
         return [datatype(x) for x in json_data]
 
     @staticmethod
-    def lookup_card_id(card_id, cards):
+    def lookup_card_id(card_id: str, cards: list[FavroCard]) -> FavroCard | None:
         if card_id is None:
             return None
         for card in cards:
@@ -73,10 +76,10 @@ class Favro:
                 return card
         return None
 
-    def get_cards(self, columns: list[FavroColumn]):
+    def get_cards(self) -> list[FavroCard]:
         cards = []
         lane_ids = [lane.id for lane in self.lanes]
-        for column in columns:
+        for column in self.columns:
             column_cards = self.__to_type(
                 FavroCard,
                 self.__get_resource(
@@ -111,7 +114,7 @@ class Favro:
         ]
         return ret_cards
 
-    def get_widget(self):
+    def get_widget(self) -> dict | None:
         response = self.session.get(
             f"https://favro.com/api/v1/{ResourceType.WIDGETS}/{self.widget_id}"
         )
@@ -123,10 +126,21 @@ class Favro:
         )
         return None
 
-    def get_tags(self):
-        return self.__get_resource(ResourceType.TAGS)
+    def get_tags(self) -> list[FavroTag]:
+        tags = self.__to_type(
+            FavroTag,
+            self.__get_resource(ResourceType.TAGS, {"widgetCommonId": self.widget_id}),
+        )
+        ret_tags = []
+        for card in self.cards:
+            if card.tags:
+                for tag_id in card.tags:
+                    favro_tag = next((t for t in tags if t.id == tag_id), None)
+                    if favro_tag is not None and favro_tag not in ret_tags:
+                        ret_tags.append(favro_tag)
+        return ret_tags
 
-    def get_columns(self):
+    def get_columns(self) -> list: # -> list[FavroColumn]
         return self.__to_type(
             FavroColumn,
             self.__get_resource(

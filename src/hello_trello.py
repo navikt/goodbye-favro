@@ -1,13 +1,13 @@
 from requests_ratelimiter import LimiterSession
 
-from src.datatypes import TrelloCard
-from src.datatypes import TrelloList
+from src.datatypes import TrelloCard, TrelloList, TrelloLabel, FavroCard
 
 
 class ResourceType:
     BOARDS = "boards"
     LISTS = "lists"
     CARDS = "cards"
+    LABELS = "labels"
 
 
 class Trello:
@@ -23,8 +23,11 @@ class Trello:
 
         self.cards = self.get_cards()
         self.lists = self.get_lists()
+        self.labels = self.get_labels()
 
-    def __get_resource(self, api_endpoint, params=None):
+    def __get_resource(
+        self, api_endpoint: str, params: dict[str, str] | None = None
+    ) -> list:
         response = self.session.get(
             f"https://api.trello.com/1/{api_endpoint}",
             params={**params, "key": self.api_key, "token": self.api_token}
@@ -37,9 +40,11 @@ class Trello:
             print(
                 f"Error fetching {api_endpoint}: {response.status_code} - {response.text}"
             )
-            return None
+            return []
 
-    def __post_resource(self, api_endpoint, params=None):
+    def __post_resource(
+        self, api_endpoint: str, params: dict[str, str] | None = None
+    ) -> dict | None:
         response = self.session.post(
             f"https://api.trello.com/1/{api_endpoint}",
             params={**params, "key": self.api_key, "token": self.api_token}
@@ -54,13 +59,17 @@ class Trello:
             )
             return None
 
-    def __to_type(self, datatype, json_data):
-        return [datatype(x) for x in json_data]
+    def __to_type(
+        self,
+        datatype: type[TrelloCard | TrelloList | TrelloLabel],
+        json_data: list,
+    ) -> list[TrelloCard] | list[TrelloList] | list[TrelloLabel]:
+        return [datatype(x) for x in json_data]  # TODO: fix the type hinting
 
     def get_board(self):
         return self.__get_resource(f"{ResourceType.BOARDS}/{self.board_id}")
 
-    def get_lists(self):
+    def get_lists(self) -> list:
         return self.__to_type(
             TrelloList,
             self.__get_resource(
@@ -68,7 +77,7 @@ class Trello:
             ),
         )
 
-    def get_cards(self):
+    def get_cards(self) -> list:
         return self.__to_type(
             TrelloCard,
             self.__get_resource(
@@ -76,7 +85,15 @@ class Trello:
             ),
         )
 
-    def create_list(self, name, pos=None):
+    def get_labels(self) -> list:
+        return self.__to_type(
+            TrelloLabel,
+            self.__get_resource(
+                f"{ResourceType.BOARDS}/{self.board_id}/{ResourceType.LABELS}"
+            ),
+        )
+
+    def create_list(self, name: str, pos: float | None = None) -> TrelloList | None:
         print(f"Creating Trello list for Favro column: {name} at position {pos}")
         params = {
             "name": name,
@@ -92,7 +109,9 @@ class Trello:
             print(f"Failed to create Trello list for {name}")
             return None
 
-    def create_card(self, favro_card, trello_list_id):
+    def create_card(
+        self, favro_card: FavroCard, trello_list_id: str
+    ) -> TrelloCard | None:
         print(f"Creating Trello card: {favro_card.name} in list {trello_list_id}")
         params = {
             "name": favro_card.name,
@@ -106,4 +125,21 @@ class Trello:
             return TrelloCard(trello_card)
         else:
             print(f"Failed to create Trello card for {favro_card.name}")
+            return None
+
+    def create_label(self, name: str, color: str) -> TrelloLabel | None:
+        print(f"Creating Trello label: {name} with color {color}")
+        params = {
+            "name": name,
+            "color": color,
+            "key": self.api_key,
+            "token": self.api_token,
+        }
+        trello_label = self.__post_resource(
+            f"{ResourceType.BOARDS}/{self.board_id}/{ResourceType.LABELS}", params
+        )
+        if trello_label:
+            return TrelloLabel(trello_label)
+        else:
+            print(f"Failed to create Trello label for {name}")
             return None

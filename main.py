@@ -16,5 +16,6 @@ if __name__ == "__main__":
         config=config.trello,
     )
 
+    print(trello.labels)
     unholy_union = unholy_union.UnholyUnion(trello, favro)
-    print(unholy_union.columns)
+    # print(unholy_union.columns)
