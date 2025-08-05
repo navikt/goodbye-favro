@@ -1,4 +1,5 @@
 import tomllib
+import argparse
 
 from src.config import Config
 from src.goodbye_favro import Favro
@@ -12,12 +13,18 @@ def parse_config():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser("goodbye-favro")
+    parser.add_argument("--delete-stuff", action="store_true")
+
+    args = parser.parse_args()
     config = parse_config()
-    favro: Favro = Favro(config=config.favro)
+
     trello: Trello = Trello(
         config=config.trello,
     )
-
-    print(trello.labels)
+    if args.delete_stuff:
+        trello.delete_all_tags()
+        exit()
+    favro: Favro = Favro(config=config.favro)
     unholy_union = UnholyUnion(trello, favro)
     # print(unholy_union.columns)

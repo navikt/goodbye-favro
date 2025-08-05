@@ -34,9 +34,7 @@ class Trello:
         self.lists = self.get_lists()
         self.labels = self.get_labels()
 
-    def __get_resource(
-        self, api_endpoint: str, params: dict[str, str] | None = None
-    ) -> list:
+    def __get_resource(self, api_endpoint: str, params: dict | None = None) -> list:
         response = self.session.get(
             f"https://api.trello.com/1/{api_endpoint}",
             params={**params, "key": self.api_key, "token": self.api_token}
@@ -55,6 +53,25 @@ class Trello:
         self, api_endpoint: str, params: dict[str, str] | None = None, ret_type=None
     ):
         response = self.session.post(
+            f"https://api.trello.com/1/{api_endpoint}",
+            params={**params, "key": self.api_key, "token": self.api_token}
+            if params
+            else {"key": self.api_key, "token": self.api_token},
+        )
+        if response.status_code == 200:
+            if ret_type:
+                return ret_type(response.json())
+            return response.json()
+        else:
+            print(
+                f"Error fetching {api_endpoint}: {response.status_code} - {response.text}"
+            )
+            return None
+
+    def __delete_resource(
+        self, api_endpoint: str, params: dict[str, str] | None = None, ret_type=None
+    ):
+        response = self.session.delete(
             f"https://api.trello.com/1/{api_endpoint}",
             params={**params, "key": self.api_key, "token": self.api_token}
             if params
@@ -147,8 +164,24 @@ class Trello:
             for checked, name in checklist_items:
                 checklist.create_item(checked, name)
 
+    def delete_all_tags(self):
+        tags = [
+            TrelloLabel(x)
+            for x in self.__get_resource(
+                f"{ResourceType.BOARDS}/{self.board_id}/{ResourceType.LABELS}",
+                params={"limit": 1000},
+            )
+        ]
+        for tag in tags:
+            self.__delete_resource(f"{ResourceType.LABELS}/{tag.id}")
+        print("Deleted all tags :)")
+
     def create_card(
-        self, favro_card: FavroCard, trello_list_id: str, tags: list[Tag]
+        self,
+        position_adjustment: float,
+        favro_card: FavroCard,
+        trello_list_id: str,
+        tags: list[Tag],
     ) -> TrelloCard | None:
         description, checklist_items = self.checklist_items(favro_card)
         print(f"Creating Trello card: {favro_card.name} in list {trello_list_id}")
@@ -157,6 +190,7 @@ class Trello:
             "desc": description,
             "idList": trello_list_id,
             "key": self.api_key,
+            "pos": int((position_adjustment + favro_card.position + 1) * 10),
             "idLabels": [x.trello.id for x in tags],
             "token": self.api_token,
         }

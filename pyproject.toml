@@ -5,7 +5,6 @@ description = "Let's move our stuff from Favro to Trello!"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "mypy>=1.17.1",
     "requests>=2.32.4",
- "requests-ratelimiter>=0.7.0",
+    "requests-ratelimiter>=0.7.0"
 ]
