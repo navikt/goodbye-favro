@@ -1,6 +1,6 @@
 [project]
 name = "goodbye-favro"
-version = "0.1.0"
+version = "0.1.1"
 description = "Let's move our stuff from Favro to Trello!"
 readme = "README.md"
 requires-python = ">=3.13"

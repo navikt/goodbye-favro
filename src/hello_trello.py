@@ -20,10 +20,11 @@ class ResourceType:
 
 
 class Trello:
-    def __init__(self, config):
+    def __init__(self, config, verbose=False):
         self.api_key = config.api_key
         self.api_token = config.api_token
         self.board_id = config.board_id
+        self.verbose = verbose
 
         # https://support.atlassian.com/trello/docs/api-rate-limits/
         # States no more than 100 requests per 10 seconds,
@@ -184,7 +185,6 @@ class Trello:
         tags: list[Tag],
     ) -> TrelloCard | None:
         description, checklist_items = self.checklist_items(favro_card)
-        print(f"Creating Trello card: {favro_card.name} in list {trello_list_id}")
         params = {
             "name": favro_card.name,
             "desc": description,
@@ -199,13 +199,14 @@ class Trello:
             ret = TrelloCard(trello_card)
             if len(checklist_items) > 0:
                 self.create_checklist(ret, checklist_items)
+            if self.verbose:
+                print(f"Created Trello card: {favro_card.name} with ID {ret.id}")
             return ret
         else:
             print(f"Failed to create Trello card for {favro_card.name}")
             return None
 
     def create_label(self, name: str, color: str) -> TrelloLabel | None:
-        print(f"Creating Trello label: {name} with color {color}")
         params = {
             "name": name,
             "color": color,
@@ -216,7 +217,10 @@ class Trello:
             f"{ResourceType.BOARDS}/{self.board_id}/{ResourceType.LABELS}", params
         )
         if trello_label:
-            return TrelloLabel(trello_label)
+            label = TrelloLabel(trello_label)
+            if self.verbose:
+                print(f"Created Trello label: {label}")
+            return label
         else:
             print(f"Failed to create Trello label for {name}")
             return None

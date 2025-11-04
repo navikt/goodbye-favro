@@ -11,11 +11,12 @@ class ResourceType:
 
 
 class Favro:
-    def __init__(self, config):
+    def __init__(self, config, verbose=False):
         self.user_id = config.user_id
         self.user_token = config.user_token
         self.organization_id = config.organization_id
         self.widget_id = config.widget_id
+        self.verbose = verbose
 
         # https://favro.com/developer/#rate-limiting-and-throttling
         # States no more than 10000 requests per hour for the enterprise plan,
@@ -53,8 +54,11 @@ class Favro:
                 data = response.json()
                 resource.extend(data["entities"])
                 page += 1
-                if data["pages"] == page:
+                if data["pages"] == page or len(data["entities"]) == 0:
                     should_stop = True
+                else:
+                    if self.verbose:
+                        print(f"Fetched page {page} of {api_endpoint}, size was {len(data['entities'])}")
             else:
                 print(
                     f"Error fetching {api_endpoint}: {response.status_code} - {response.text}"

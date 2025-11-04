@@ -15,16 +15,24 @@ def parse_config():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("goodbye-favro")
     parser.add_argument("--delete-stuff", action="store_true")
+    parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--ignore-lanes")
 
     args = parser.parse_args()
     config = parse_config()
 
+    lanes_to_ignore = []
+    if args.ignore_lanes:
+        lanes_to_ignore = [x.strip() for x in args.ignore_lanes.split(",")]
+        print(f"Ignoring lanes: {lanes_to_ignore}")
+
     trello: Trello = Trello(
         config=config.trello,
+        verbose=args.verbose,
     )
     if args.delete_stuff:
         trello.delete_all_tags()
         exit()
-    favro: Favro = Favro(config=config.favro)
-    unholy_union = UnholyUnion(trello, favro)
+    favro: Favro = Favro(config=config.favro, verbose=args.verbose)
+    unholy_union = UnholyUnion(trello, favro, verbose=args.verbose, lanes_to_ignore=lanes_to_ignore)
     # print(unholy_union.columns)

@@ -32,3 +32,6 @@ class FavroCard:
         self.favro_attachments = data.get("favroAttachments")
         self.num_comments = data.get("numComments", 0)
         self.due_date = data.get("dueDate")
+
+    def __repr__(self):
+        return f"FavroCard(id='{self.id}', name='{self.name}', position={self.position}, archived={self.archived}, list_position={self.list_position}, sheet_position={self.sheet_position}, lane_id='{self.lane_id}', column_id='{self.column_id}')"

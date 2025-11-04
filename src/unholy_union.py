@@ -4,9 +4,11 @@ from src.datatypes import Column, Tag, get_column_from_favro_id, choose_color
 
 
 class UnholyUnion:
-    def __init__(self, trello: Trello, favro: Favro):
+    def __init__(self, trello: Trello, favro: Favro, verbose=False, lanes_to_ignore=None):
         self.trello = trello
         self.favro = favro
+        self.verbose = verbose
+        self.lanes_to_ignore = lanes_to_ignore if lanes_to_ignore else []
         self.tags = self.__tags()
         self.columns = self.__columns()
         self.cards = self.__cards()
@@ -76,6 +78,10 @@ class UnholyUnion:
                 ),
                 None,
             )
+            if favro_card.lane_id in self.lanes_to_ignore:
+                if self.verbose:
+                    print(f"Ignoring card {favro_card.name} in lane {favro_card.lane_id}")
+                continue
             if not trello_card:
                 column = get_column_from_favro_id(self.columns, favro_card.column_id)
                 if not column:
